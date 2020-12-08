@@ -2,19 +2,23 @@ defmodule Solution do
   @sum 2020
 
   def find(input) do
-    [a, b] =
-      input
-      |> Enum.flat_map(fn op_a ->
-        Enum.filter(input, &(op_a + &1 == @sum))
+    [a, b, c] =
+      Enum.map(input, fn op_a ->
+        Enum.map(input, fn op_b ->
+          Enum.filter(input, &(op_a + op_b + &1 == @sum))
+        end)
       end)
-    IO.puts("A: #{a}, B: #{b}")
-    IO.puts(a * b)
+      |> List.flatten()
+      |> Enum.uniq()
+
+    IO.puts("A: #{a}, B: #{b}, C: #{c}")
+    IO.puts(a * b * c)
   end
 end
 
-input = [1721, 979, 366, 299, 675, 1456]
+_input = [1721, 979, 366, 299, 675, 1456]
 
-_input = [
+input = [
   1735,
   1700,
   1358,
