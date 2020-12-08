@@ -12,11 +12,16 @@ defmodule Solution do
 
   def satisfy?([rule, password]) do
     password = String.trim(password)
-    [limits, character] = String.split(rule)
-    [limit_s, limit_f] = String.split(limits, "-") |> Enum.map(&String.to_integer/1)
+    [positions, character] = String.split(rule)
+    [pos_first, pos_last] = String.split(positions, "-") |> Enum.map(&String.to_integer/1)
 
-    characters_number = Regex.scan(~r/#{character}/, password) |> Enum.count
-    Enum.member?(limit_s..limit_f, characters_number)
+    first = String.at(password, pos_first - 1) == character
+    second = String.at(password, pos_last - 1) == character
+
+    #  only in one of the positions character exists, not in the both
+    # /                    / but it exists at least in one of them
+    # |                    |
+    (first != second) && (first || second)
   end
 end
 
