@@ -5,7 +5,12 @@ defmodule Solution do
     |> Enum.map(fn boarding_pass ->
       find_row(boarding_pass) * 8 + find_col(boarding_pass)
     end)
-    |> Enum.max()
+    |> Enum.sort()
+    |> Enum.reduce(fn
+      x, acc when x - acc == 1 -> x
+      _x, acc -> acc
+    end)
+    # + 1
     |> IO.inspect()
   end
 
@@ -18,7 +23,7 @@ defmodule Solution do
     end)
   end
 
-  defp find_row([row: row, col: _]) do
+  defp find_row(row: row, col: _) do
     row
     |> String.split("", trim: true)
     |> find_row(0, 127)
@@ -28,7 +33,7 @@ defmodule Solution do
   defp find_row(["F" | tail], low, high), do: find_row(tail, low, div(low + high, 2))
   defp find_row(["B" | tail], low, high), do: find_row(tail, div(low + high, 2) + 1, high)
 
-  defp find_col([row: _, col: col]) do
+  defp find_col(row: _, col: col) do
     col
     |> String.split("", trim: true)
     |> find_col(0, 7)
