@@ -2,7 +2,7 @@ defmodule Solution do
   def find(input) do
     input
     |> split_into_groups()
-    |> Enum.map(&seek_and_count_individuals/1)
+    |> Enum.map(&seek_and_count_common_answers/1)
     |> Enum.sum()
     |> IO.inspect()
   end
@@ -12,10 +12,13 @@ defmodule Solution do
     |> String.split("\n\n", trim: true)
   end
 
-  defp seek_and_count_individuals(group) do
+  defp seek_and_count_common_answers(group) do
     group
-    |> String.replace("\n", "")
-    |> String.split("", trim: true)
+    |> String.split("\n", trim: true)
+    |> Enum.map(&String.split(&1, "", trim: true))
+    |> Enum.map(&MapSet.new/1)
+    |> Enum.reduce(&MapSet.intersection/2)
+    |> MapSet.to_list()
     |> Enum.uniq()
     |> Enum.count()
   end
