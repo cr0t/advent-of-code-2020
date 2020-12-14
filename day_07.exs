@@ -1,5 +1,5 @@
 defmodule Solution do
-  def find(input) do
+  def find_one(input) do
     input
     |> normalize()
     |> understand_rules()
@@ -7,6 +7,17 @@ defmodule Solution do
     |> Enum.map(fn {bag_type, _} -> bag_type end)
     |> Enum.uniq()
     |> Enum.count()
+    |> IO.inspect()
+  end
+
+  def find_two(input) do
+    input
+    |> normalize()
+    |> understand_rules()
+    |> what_fits_in?("shiny gold")
+    |> List.flatten()
+    |> Enum.count()
+    # Don't forget to -1 as we do not count the main bag
     |> IO.inspect()
   end
 
@@ -76,6 +87,29 @@ defmodule Solution do
     |> Enum.any?(fn
       {_n, ^bag_type} -> true
       _ -> false
+    end)
+  end
+
+  ### Part 2
+
+  defp what_fits_in?(rules, bag_type) do
+    rules
+    |> Enum.reduce([], fn
+      {^bag_type, contents}, _acc ->
+        must_contain =
+          contents
+          |> Enum.map(fn
+            {n, bag} ->
+              List.duplicate(what_fits_in?(rules, bag), n)
+
+            _ ->
+              []
+          end)
+
+        [bag_type | must_contain]
+
+      _, acc ->
+        acc
     end)
   end
 end
@@ -677,4 +711,4 @@ pale blue bags contain 2 clear silver bags.
 dark brown bags contain 1 dim lime bag.
 """
 
-Solution.find(input)
+Solution.find_two(input)
