@@ -2,35 +2,45 @@ defmodule Solution do
   def find(input) do
     input
     |> normalize()
-    |> retrieve_rules()
+    |> understand_rules()
     |> what_applies_for?("shiny gold")
-    |> parse_uniq_containers()
+    |> Enum.map(fn {bag_type, _} -> bag_type end)
+    |> Enum.uniq()
     |> Enum.count()
     |> IO.inspect()
   end
 
+  # striped beige bags contain 5 dull beige bags.
+  # =>
+  # ["striped beige bags contain 5 dull beige bags"]
   defp normalize(input) do
     input
     |> String.replace(".", "")
     |> String.split("\n", trim: true)
   end
 
-  defp retrieve_rules(input) do
+  # ["striped beige bags contain 5 dull beige bags"]
+  # =>
+  # {"striped beige", [{5, "dull beige"}]}
+  defp understand_rules(input) do
     input
     |> Enum.map(fn rule ->
       [bag, contents] =
         rule
         |> String.split(" bags contain ", trim: true)
 
-      contents =
+      must_contain =
         contents
-        |> retrieve_contents()
+        |> convert_contents()
 
-      {bag, contents}
+      {bag, must_contain}
     end)
   end
 
-  defp retrieve_contents(contents) do
+  # "4 dark bronze bags, 3 posh tan bags"
+  # =>
+  # [{4, "dark bronze"}, {3, "posh tan"}]
+  defp convert_contents(contents) do
     contents
     |> String.split(", ", trim: true)
     |> Enum.map(&String.replace(&1, ~r/ bags?/, ""))
@@ -50,12 +60,13 @@ defmodule Solution do
       rules
       |> Enum.filter(&container_fits?(&1, bag_type))
 
-    List.flatten(
-      to_check ++
-        Enum.map(to_check, fn {container_to_check, _} ->
-          what_applies_for?(rules, container_to_check)
-        end)
-    )
+    containers =
+      to_check
+      |> Enum.map(fn {bag_to_check, _} ->
+        what_applies_for?(rules, bag_to_check)
+      end)
+
+    List.flatten([containers | to_check])
   end
 
   defp container_fits?({_container, []}, _bag_type), do: false
@@ -66,12 +77,6 @@ defmodule Solution do
       {_n, ^bag_type} -> true
       _ -> false
     end)
-  end
-
-  defp parse_uniq_containers(applicable_rules) do
-    applicable_rules
-    |> Enum.map(fn {bag_type, _} -> bag_type end)
-    |> Enum.uniq()
   end
 end
 
