@@ -1,8 +1,24 @@
 defmodule Solution do
   def find_first(input) do
+    {:looped, accumulator} =
+      input
+      |> normalize()
+      |> run()
+
+    accumulator
+    |> IO.inspect()
+  end
+
+  def find_second(input) do
     input
     |> normalize()
-    |> run_first()
+    |> generate_program_variants()
+    |> Enum.find(fn program ->
+      # run each variant of the program until we find the one that passes
+      {result, _acc} = run(program)
+      result == :passed
+    end)
+    |> run()
     |> IO.inspect()
   end
 
@@ -22,21 +38,48 @@ defmodule Solution do
     end)
   end
 
-  defp run_first(program, accumulator \\ 0, op_idx \\ 0, stacktrace \\ []) do
-    if Enum.member?(stacktrace, op_idx) do
-      accumulator
-    else
-      case Enum.at(program, op_idx) do
-        {"nop", _} ->
-          run_first(program, accumulator, op_idx + 1, [op_idx | stacktrace])
+  defp run(program, accumulator \\ 0, op_idx \\ 0, stacktrace \\ []) do
+    cond do
+      op_idx == length(program) ->
+        # everything is fine - last instruction got executed!
+        {:passed, accumulator}
 
-        {"acc", arg} ->
-          run_first(program, accumulator + arg, op_idx + 1, [op_idx | stacktrace])
+      Enum.member?(stacktrace, op_idx) ->
+        # loop detected if any previous executed instruction is in stack
+        {:looped, accumulator}
 
-        {"jmp", arg} ->
-          run_first(program, accumulator, op_idx + arg, [op_idx | stacktrace])
-      end
+      true ->
+        case Enum.at(program, op_idx) do
+          {"nop", _} ->
+            run(program, accumulator, op_idx + 1, [op_idx | stacktrace])
+
+          {"acc", arg} ->
+            run(program, accumulator + arg, op_idx + 1, [op_idx | stacktrace])
+
+          {"jmp", arg} ->
+            run(program, accumulator, op_idx + arg, [op_idx | stacktrace])
+        end
     end
+  end
+
+  defp generate_program_variants(program) do
+    variants =
+      program
+      |> Enum.with_index()
+      |> Enum.reduce([], fn
+        {{"nop", n}, op_idx}, acc ->
+          new_variant = List.replace_at(program, op_idx, {"jmp", n})
+          [new_variant | acc]
+
+        {{"jmp", n}, op_idx}, acc ->
+          new_variant = List.replace_at(program, op_idx, {"nop", n})
+          [new_variant | acc]
+
+        _, acc ->
+          acc
+      end)
+
+    [program | variants]
   end
 end
 
@@ -681,4 +724,4 @@ acc +16
 jmp +1
 """
 
-Solution.find_first(input)
+Solution.find_second(input)
